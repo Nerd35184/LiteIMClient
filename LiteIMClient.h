@@ -10,6 +10,7 @@
 #include <QNetworkAccessManager>
 #include <QWebSocket>
 #include "ContactListItem.h"
+#include "SessInfo.h"
 
 #define LOGIN_URL_FORMAT ("http://%s/api/login")
 #define GET_CONTACT_LIST_URL_FORMAT ("http://%s/api/get_contact_list")
@@ -36,6 +37,11 @@ public:
     int getQPixmap(const QString &url,
                    std::function<void(const QPixmap &)> callback,
                    std::function<void(QNetworkReply *reply)> errorCallback);
+    QString generateOneToOneChatSessId(const QString &userA, const QString &userB);
+
+    int selectMenu(MenuWidget::Btn btn);
+    int upsertSessDetail(const SessInfo& sessInfo,bool show);
+
 private:
     MainWidget mainWidget_;
     // UserInfoWidget userInfowidget_;
@@ -60,6 +66,7 @@ private:
 
     std::map<QString,std::shared_ptr<UserInfo>> userInfoCache_;
     std::map<QString,std::shared_ptr<QPixmap>> pixmapCache_;
+    std::map<QString, std::shared_ptr<SessInfo>> sessInfos_;
 
 private:
     void handleLogInResponse(
@@ -71,9 +78,11 @@ private:
         const QString &msg,
         const QJsonObject &data);
 
-    void menuWBtnClickedCallback(MenuWidget&,MenuWidget::Btn);
+    void menuBtnClickedCallback(MenuWidget&,MenuWidget::Btn);
     void contactListItemDeleteActCallback(ContactListItem& item);
     void contactListItemClickedCallback(ContactListItem& item);
+    void sessListItemClickedCallback(SessListItem& item);
+    void createSessBtnClickedCallback(ContactDetailWidget& w);
 };
 
 #endif // LITEIMCLIENT_H

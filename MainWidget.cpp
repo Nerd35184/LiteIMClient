@@ -116,9 +116,23 @@ int MainWidget::setContactListItemClickedCallback(std::function<void (ContactLis
     return 0;
 }
 
+int MainWidget::selectContactListItem(const QString &userId)
+{
+    return this->selectListItem<ContactListItem>(
+        this->contactListWidget_,
+        [&userId](const ContactListItem& item){
+            return item.getUserIdR() == userId;
+        });
+}
+
 int MainWidget::setContactDetail(const QString &userId, const QString &nickname, const QString &signature, const QPixmap &avatar)
 {
     return this->cttDtlWidget_->setDetail(userId,nickname,signature,avatar);
+}
+
+int MainWidget::setCreateSessBtnClickedCallback(std::function<void (ContactDetailWidget &)> callback)
+{
+    return this->cttDtlWidget_->setCreateSessBtnClickedCallback(callback);
 }
 
 int MainWidget::addSessListWidget(SessListItem *item)
@@ -150,6 +164,79 @@ int MainWidget::setSessListItemClickedCallback(std::function<void (SessListItem 
 {
     this->sessListItemClickedCallback_ = callback;
     return 0;
+}
+
+int MainWidget::selectSessListItem(const QString &sessId)
+{
+    return this->selectListItem<SessListItem>(
+        this->sessListWidget_,
+        [&sessId](const SessListItem& item){
+            return item.getSessIdR() == sessId;
+        });
+}
+
+int MainWidget::upsertSessListItem(SessListItem *newSessItem,bool select)
+{
+    if(newSessItem == nullptr){
+        return -1;
+    }
+    auto listWidget = this->sessListWidget_;
+    bool found = false;
+    int i = 0;
+
+    for (i = 0; i < listWidget->count(); i++)
+    {
+        auto item = listWidget->item(i);
+        if (item == nullptr)
+        {
+            return -1;
+        }
+        auto itemWidget = listWidget->itemWidget(item);
+        if (itemWidget == nullptr)
+        {
+            return -1;
+        }
+        if(found && select){
+            itemWidget->setStyleSheet("background-color: rgba(230, 230, 230,255);");
+            continue;
+        }
+        auto olsSessItem = qobject_cast<SessListItem*>(itemWidget);
+        if (olsSessItem == nullptr)
+        {
+            return -1;
+        }
+        if(newSessItem->getSessIdR() == olsSessItem->getSessIdR()){
+            found = true;
+        }
+
+        if(found && !select){
+            break;
+        }
+        if(found && select){
+            olsSessItem->setStyleSheet("background-color: rgba(200, 198, 197,255);");
+            break;
+        }
+
+        if(!found && select){
+            olsSessItem->setStyleSheet("background-color: rgba(230, 230, 230,255);");
+        }
+    }
+    if(!found){
+        if(select){
+            newSessItem->setStyleSheet("background-color: rgba(200, 198, 197,255);");
+        }
+        return this->addSessListWidget(newSessItem);
+    }
+    return 0;
+}
+
+int MainWidget::upsertSessDetail(ChatDetailWidget *w, bool show)
+{
+    if(w == nullptr){
+        return -1;
+    }
+    qDebug("tmp 7.2.1");
+    return this->sessDtlWidget_->upsertSessDetail(w,show);
 }
 
 void MainWidget::initUI(QWidget *parent)

@@ -21,13 +21,26 @@ LiteIMClient::LiteIMClient(const QString &host)
 
     this->mainWidget_.setMenuBtnClickCallback(
         [this](MenuWidget& w,MenuWidget::Btn btn){
-            this->menuWBtnClickedCallback(w,btn);
+            this->menuBtnClickedCallback(w,btn);
         }
         );
 
-    this->mainWidget_.setContactListItemClickedCallback([this](ContactListItem &item){
-        this->contactListItemClickedCallback(item);
-    });
+    this->mainWidget_.setContactListItemClickedCallback(
+        [this](ContactListItem &item){
+            this->contactListItemClickedCallback(item);
+        });
+
+    this->mainWidget_.setCreateSessBtnClickedCallback(
+        [this](ContactDetailWidget& w)
+        {
+            this->createSessBtnClickedCallback(w);
+        });
+
+    this->mainWidget_.setSessListItemClickedCallback(
+        [this](SessListItem& w){
+            this->sessListItemClickedCallback(w);
+        }
+        );
 
 
     this->mainWidget_.showItemListWidget(MainWidget::SessionItemList);
@@ -58,6 +71,7 @@ int LiteIMClient::getQPixmap(const QString &url,
         headers,
         [this, url, callback](QNetworkReply *reply)
         {
+            reply->deleteLater();
             QByteArray body = reply->readAll();
             auto iconPtr = std::make_shared<QPixmap>();
             auto ok = iconPtr->loadFromData(body);
@@ -215,16 +229,9 @@ void LiteIMClient::handleGetContactListResponse(const int code, const QString &m
     return ;
 }
 
-void LiteIMClient::menuWBtnClickedCallback(MenuWidget &w, MenuWidget::Btn btn)
+void LiteIMClient::menuBtnClickedCallback(MenuWidget &w, MenuWidget::Btn btn)
 {
-    this->mainWidget_.selectMenuBtn(btn);
-    if(btn == MenuWidget::contactBtn){
-        this->mainWidget_.showItemListWidget(MainWidget::ContactItemList);
-        this->mainWidget_.showDetailWidget(MainWidget::ContactDetail);
-    }else if(btn == MenuWidget::sessBtn){
-        this->mainWidget_.showItemListWidget(MainWidget::SessionItemList);
-        this->mainWidget_.showDetailWidget(MainWidget::SessDetail);
-    }
+    this->selectMenu(btn);
 }
 
 void LiteIMClient::contactListItemDeleteActCallback(ContactListItem &item)
@@ -250,4 +257,124 @@ void LiteIMClient::contactListItemClickedCallback(ContactListItem &item)
         *avatar
         );
     return ;
+}
+
+void LiteIMClient::sessListItemClickedCallback(SessListItem &item)
+{
+    auto sessInfo = this->sessInfos_[item.getSessIdR()];
+    if (sessInfo != nullptr)
+    {
+        this->mainWidget_.selectSessListItem(sessInfo->getSessIdR());
+        this->upsertSessDetail(*sessInfo, true);
+        return;
+    }
+    return ;
+}
+
+QString LiteIMClient::generateOneToOneChatSessId(const QString &userA, const QString &userB)
+{
+    if (userA < userB)
+    {
+        return userA + "_" + userB;
+    }
+    return userB + "_" + userA;
+}
+
+int LiteIMClient::selectMenu(MenuWidget::Btn btn)
+{
+    this->mainWidget_.selectMenuBtn(btn);
+    if(btn == MenuWidget::contactBtn){
+        this->mainWidget_.showItemListWidget(MainWidget::ContactItemList);
+        this->mainWidget_.showDetailWidget(MainWidget::ContactDetail);
+    }else if(btn == MenuWidget::sessBtn){
+        this->mainWidget_.showItemListWidget(MainWidget::SessionItemList);
+        this->mainWidget_.showDetailWidget(MainWidget::SessDetail);
+    }
+    return 0;
+}
+
+int LiteIMClient::upsertSessDetail(const SessInfo& sessInfo,bool show)
+{
+    ObjGuard g(1);
+    auto sessWidget = CreateQWidget<ChatDetailWidget>(
+        g,
+        "ChatSessDetailWidget",
+        nullptr,
+        sessInfo.getSessIdR(),
+        sessInfo.getSessNameR(),
+        [this](ChatDetailWidget &chatDetailWidget)
+        {
+            //todo
+            // this->sendMsgBtnClickedCallback(chatSessDetailWidget);
+        });
+    int ret = this->mainWidget_.upsertSessDetail(sessWidget, true);
+    if (ret != 0)
+    {
+        qDebug("LiteImClient upsertSessDetail upsertSessDetail error");
+        return ret;
+    }
+    return 0;
+}
+
+void LiteIMClient::createSessBtnClickedCallback(ContactDetailWidget &w)
+{
+    auto userInfo = this->userInfoCache_[w.getUserIdR()];
+    if (userInfo == nullptr)
+    {
+        qDebug("LiteImClient::createSessBtnClickedCallback get userinfo error");
+        return;
+    }
+    auto avatar = this->pixmapCache_[userInfo->getAvatarUrlR()];
+    if (avatar == nullptr)
+    {
+        avatar = std::make_shared<QPixmap>();
+    }
+
+    this->selectMenu(MenuWidget::sessBtn);
+
+    auto sessId = this->generateOneToOneChatSessId(this->userId_, userInfo->getUserIdR());
+
+    auto sessInfo = this->sessInfos_[sessId];
+    if (sessInfo != nullptr)
+    {
+        this->mainWidget_.selectSessListItem(sessId);
+        this->upsertSessDetail(*sessInfo, true);
+        return;
+    }
+    sessInfo = std::make_shared<SessInfo>(
+        sessId,
+        userInfo->getNicknameR(),
+        userInfo->getUserIdR(),
+        userInfo->getAvatarUrlR());
+
+    this->sessInfos_[sessId] = sessInfo;
+    // todo 这里要考虑失败后除了析构，还需要从sessInfos中删除
+    ObjGuard g(1);
+    auto sessListItem = CreateQWidget<SessListItem>(
+        g,
+        "SessInfoWidget",
+        nullptr,
+        sessId,
+        sessInfo->getSessNameR(),
+        "",
+        *avatar);
+    sessListItem->setDeleteActionTriggered(
+        [this](SessListItem &sess)
+        {
+            //todo
+            // this->deleteSessCallback(sess);
+        });
+    int ret = this->mainWidget_.upsertSessListItem(sessListItem,true);
+    if (ret != 0)
+    {
+        qDebug("LiteImClient createSessBtnClickedCallback upsertSessInfoItem error");
+        return;
+    }
+    ret = this->upsertSessDetail(*sessInfo, true);
+    if (ret != 0)
+    {
+        qDebug("LiteImClient createSessBtnClickedCallback upsertSessDetail error");
+        return;
+    }
+    return;
 }

@@ -6,6 +6,14 @@ ContactDetailWidget::ContactDetailWidget(QWidget *parent)
     : QWidget{parent}
 {
     this->initUI(this);
+
+    connect(this->createSessBtn_,&QPushButton::clicked,this,&ContactDetailWidget::createSessBtnClicked);
+}
+
+int ContactDetailWidget::setCreateSessBtnClickedCallback(std::function<void (ContactDetailWidget &)> callback)
+{
+    this->createSessBtnClickedCallback_ = callback;
+    return 0;
 }
 
 int ContactDetailWidget::setDetail(
@@ -50,5 +58,13 @@ void ContactDetailWidget::initUI(QWidget *parent)
     layout->addWidget(this->signatureLbl_);
     layout->addWidget(this->createSessBtn_);
     layout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+    return;
+}
+
+void ContactDetailWidget::createSessBtnClicked(bool)
+{
+    if(this->createSessBtnClickedCallback_==nullptr){
+    }
+    this->createSessBtnClickedCallback_(*this);
     return;
 }

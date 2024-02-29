@@ -9,6 +9,7 @@
 #include "ContactListItem.h"
 #include <QListWidget>
 #include "SessListItem.h"
+#include "ChatDetailWidget.h"
 
 class MainWidget : public QWidget
 {
@@ -34,21 +35,28 @@ public:
         std::function<void()> showSearchDetailWidgetBtnClickedCallback);
     int setMenuWidgetAvatar(const QPixmap& avatar);
     int selectMenuBtn(MenuWidget::Btn btn);
+    int clickMenuBtn(MenuWidget::Btn btn);
     int setMenuBtnClickCallback(std::function<void(MenuWidget&,MenuWidget::Btn)> callback);
     int clearList(ItemListWidgetEnum i);
 
     int addContactListItem(ContactListItem* item);
     int setContactListItemAvatar(const QString& userId,const QPixmap& avatar);
     int setContactListItemClickedCallback(std::function<void(ContactListItem& item)> callback);
+    int selectContactListItem(const QString& userId);
     int setContactDetail(
         const QString &userId,
         const QString &nickname,
         const QString &signature,
         const QPixmap &avatar);
+    int setCreateSessBtnClickedCallback(std::function<void(ContactDetailWidget &w)> callback);
+
 
     int addSessListWidget(SessListItem* item);
     int setSessListItemAvatar(const QString& userId,const QPixmap& avatar);
     int setSessListItemClickedCallback(std::function<void(SessListItem& item)> callback);
+    int selectSessListItem(const QString& sessId);
+    int upsertSessListItem(SessListItem* item, bool select);
+    int upsertSessDetail(ChatDetailWidget* w,bool show);
 
 
 private:
@@ -69,8 +77,8 @@ private:
     void initSearchAndItemListWidget(QWidget *parent);
     void initTitlAndItemDetailWidget(QWidget *parent);
     void showSearchDetailWidgetBtnClicked(bool);
-    void ContactListWidgetClicked(ContactListItem& item);
-    void SessListWidgetClicked(SessListItem& item);
+    void contactListWidgetClicked(ContactListItem& item);
+    void sessListWidgetClicked(SessListItem& item);
 
     void contactListItemClicked(QListWidgetItem *itemClicked);
     void sessListItemClicked(QListWidgetItem *itemClicked);
@@ -78,6 +86,23 @@ private:
 
     template<class T>
     int ListItemClicked(QListWidget *listWidget, QListWidgetItem *itemClicked,std::function<void(T&)> callback){
+        if (listWidget == nullptr)
+        {
+            qDebug("ItemInfoListWidget ContactListItemClicked");
+            return -1;
+        }
+        auto infoWidget = qobject_cast<T *>(listWidget->itemWidget(itemClicked));
+        if (infoWidget == nullptr)
+        {
+            qDebug("ItemInfoListWidget::ContactListItemClicked qobject_cast error");
+            return -1;
+        }
+        callback(*infoWidget);
+        return 0;
+    }
+
+    template<class T>
+    int selectListItem(QListWidget *listWidget,std::function<bool(const T& t)> comparator){
         if (listWidget == nullptr)
         {
             qDebug("ItemInfoListWidget ContactListItemClicked");
@@ -92,22 +117,14 @@ private:
                 qDebug("ItemInfoListWidget::ContactListItemClicked qobject_cast error");
                 return -1;
             }
-            if (item == itemClicked)
-            {
+            if(comparator(*infoWidget)){
                 infoWidget->setStyleSheet("background-color: rgba(200, 198, 197,255);");
-                if (callback != nullptr)
-                {
-                    callback(*infoWidget);
-                }
-            }
-            else
-            {
+            }else{
                 infoWidget->setStyleSheet("background-color: rgba(230, 230, 230,255);");
             }
         }
         return 0;
     }
-
 signals:
 };
 

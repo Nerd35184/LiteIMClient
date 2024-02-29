@@ -27,8 +27,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MainWidget.h MainWidget.cpp
         Util.h Util.cpp
         ObjGuard.h ObjGuard.cpp
-        ItemListWidget.h ItemListWidget.cpp
-        ItemDetailWidget.h ItemDetailWidget.cpp
         TitleWidget.h TitleWidget.cpp
         UserInfo.h UserInfo.cpp
         SearchWidget.h SearchWidget.cpp
@@ -39,6 +37,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Resource.qrc
         ContactListItem.h ContactListItem.cpp
         SessListItem.h SessListItem.cpp
+        ChatDetailWidget.h ChatDetailWidget.cpp
+        ChatBubbleListWidget.h ChatBubbleListWidget.cpp
+        SessInfo.h SessInfo.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET LiteIMClient APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
