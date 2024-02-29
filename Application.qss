@@ -1,0 +1,107 @@
+#MainWidget_menuWidget{
+    background-color: rgba(46, 46, 46,255);
+    min-width:50px;
+    max-width:50px;
+}
+
+#MenuWidget_avatarLbl{
+    min-width:36px;
+    max-width:36px;
+    min-height:36px;
+    max-height:36px;
+    border-radius:4px;
+
+    margin-top:36px;
+    margin-left:7px;
+}
+
+#MenuWidget_sessBtn{
+    margin-top:24px;
+    background-color: rgba(46, 46, 46,255);
+    color: rgba(151, 151, 151,255);
+    border: none;
+}
+
+#MenuWidget_contactBtn{
+    margin-top:24px;
+    background-color: rgba(46, 46, 46,255);
+    color: rgba(151, 151, 151,255);
+    border: none;
+}
+
+#MenuWidget_newContactBtn{
+    margin-top:24px;
+    background-color: rgba(46, 46, 46,255);
+    color: rgba(151, 151, 151,255);
+    border: none;
+}
+
+#MainWidget_sessDtlWidget{
+    background-color: rgba(230, 230, 230,255);
+}
+
+
+#MainWidget_searchAndItemListWidget{
+    min-width:200px;
+    max-width:270px;
+}
+
+
+#MainWidget_searchWidget{
+    min-height:64px;
+    max-height:64px;
+    background-color: rgba(247, 247, 247,255);
+
+    border-bottom:solid;
+    border-bottom-color:rgb(233, 233, 233);
+    border-bottom-width:1px;
+
+    border-right:solid;
+    border-right-color:rgb(214, 214, 214);
+    border-right-width:1px;
+}
+
+#SearchWidget_searchListLdt{
+    background-color: rgba(226, 226, 226,255);
+    min-height:28px;
+    max-height:28px;
+    border: none;
+    margin-left:12px;
+    margin-top:28px;
+}
+
+#SearchWidget_showSearchDetailWidgetBtn{
+    background-color: rgba(226, 226, 226,255);
+
+    min-height:28px;
+    max-height:28px;
+    min-width:28px;
+    max-width:28px;
+
+    border: none;
+
+    margin-top:28px;
+    margin-left:12px;
+    margin-right:12px;
+}
+
+
+#MainWidget_sessListWidget{
+    background-color: rgba(230, 230, 230,255);
+    border-right:solid;
+    border-right-color:rgb(214, 214, 214);
+    border-right-width:1px;
+}
+
+#MainWidget_contactListWidget{
+    background-color: rgba(230, 230, 230,255);
+    border-right:solid;
+    border-right-color:rgb(214, 214, 214);
+    border-right-width:1px;
+}
+
+#MainWidget_titleWidget{
+    min-height:24px;
+    max-height:24px;
+    background-color: rgba(245, 245, 245,255);
+}

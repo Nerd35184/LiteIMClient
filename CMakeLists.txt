@@ -10,18 +10,33 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Network WebSockets)
 
 set(PROJECT_SOURCES
         main.cpp
-        widget.cpp
-        widget.h
+
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(LiteIMClient
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        LiteIMClient.h LiteIMClient.cpp
+        MenuWidget.h MenuWidget.cpp
+        MainWidget.h MainWidget.cpp
+        Util.h Util.cpp
+        ObjGuard.h ObjGuard.cpp
+        ItemListWidget.h ItemListWidget.cpp
+        ItemDetailWidget.h ItemDetailWidget.cpp
+        TitleWidget.h TitleWidget.cpp
+        UserInfo.h UserInfo.cpp
+        SearchWidget.h SearchWidget.cpp
+        JsonStructs.h JsonStructs.cpp
+        SessDetailWidget.h SessDetailWidget.cpp
+        ContactDetailWidget.h ContactDetailWidget.cpp
+        UserInfoWidget.h UserInfoWidget.cpp
+        Resource.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET LiteIMClient APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -41,7 +56,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(LiteIMClient PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(LiteIMClient PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::WebSockets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
