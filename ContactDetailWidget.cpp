@@ -4,7 +4,33 @@
 
 ContactDetailWidget::ContactDetailWidget(QWidget *parent)
     : QWidget{parent}
-{}
+{
+    this->initUI(this);
+}
+
+int ContactDetailWidget::setDetail(
+    const QString &userId,
+    const QString &nickname,
+    const QString &signature,
+    const QPixmap &avatar)
+{
+    this->userId_ = userId;
+    this->nicknameLbl_->setText("昵称：" + nickname);
+    this->signatureLbl_->setText("个性签名：" + signature);
+    this->avatarLbl_->setPixmap(avatar);
+
+    this->avatarLbl_->show();
+    this->nicknameLbl_->show();
+    this->signatureLbl_->show();
+    this->avatarLbl_->show();
+    this->createSessBtn_->show();
+    return 0;
+}
+
+const QString &ContactDetailWidget::getUserIdR() const
+{
+    return this->userId_;
+}
 
 void ContactDetailWidget::initUI(QWidget *parent)
 {

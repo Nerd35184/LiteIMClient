@@ -9,6 +9,7 @@
 #include "UserInfoWidget.h"
 #include <QNetworkAccessManager>
 #include <QWebSocket>
+#include "ContactListItem.h"
 
 #define LOGIN_URL_FORMAT ("http://%s/api/login")
 #define GET_CONTACT_LIST_URL_FORMAT ("http://%s/api/get_contact_list")
@@ -21,9 +22,17 @@
 
 class LiteIMClient
 {
+
+public:
+    enum ContactType{
+        SystemUser = 1,
+        RegularUser = 2
+    };
+
 public:
     LiteIMClient(const QString& host);
     int logIn(const QString& username,const QString& password);
+    int getContactList(int offset,int limit);
     int getQPixmap(const QString &url,
                    std::function<void(const QPixmap &)> callback,
                    std::function<void(QNetworkReply *reply)> errorCallback);
@@ -57,6 +66,14 @@ private:
         const int code,
         const QString &msg,
         const QJsonObject &data);
+    void handleGetContactListResponse(
+        const int code,
+        const QString &msg,
+        const QJsonObject &data);
+
+    void menuWBtnClickedCallback(MenuWidget&,MenuWidget::Btn);
+    void contactListItemDeleteActCallback(ContactListItem& item);
+    void contactListItemClickedCallback(ContactListItem& item);
 };
 
 #endif // LITEIMCLIENT_H

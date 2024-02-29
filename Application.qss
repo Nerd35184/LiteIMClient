@@ -16,25 +16,58 @@
 }
 
 #MenuWidget_sessBtn{
+    min-width:36px;
+    max-width:36px;
+    min-height:36px;
+    max-height:36px;
     margin-top:24px;
+    margin-left:7px;
+    border-radius:4px;
     background-color: rgba(46, 46, 46,255);
     color: rgba(151, 151, 151,255);
     border: none;
+}
+
+#MenuWidget_sessBtn:hover{
+    background-color: rgba(100,100, 100,255);
 }
 
 #MenuWidget_contactBtn{
+    min-width:36px;
+    max-width:36px;
+    min-height:36px;
+    max-height:36px;
+    margin-top:24px;
+    margin-left:7px;
+    border-radius:4px;
     margin-top:24px;
     background-color: rgba(46, 46, 46,255);
     color: rgba(151, 151, 151,255);
     border: none;
 }
 
+#MenuWidget_contactBtn:hover{
+    background-color: rgba(100,100, 100,255);
+}
+
 #MenuWidget_newContactBtn{
+    min-width:36px;
+    max-width:36px;
+    min-height:36px;
+    max-height:36px;
+    margin-top:24px;
+    margin-left:7px;
+    border-radius:4px;
     margin-top:24px;
     background-color: rgba(46, 46, 46,255);
     color: rgba(151, 151, 151,255);
     border: none;
 }
+
+#MenuWidget_newContactBtn:hover{
+    background-color: rgba(100,100, 100,255);
+}
+
 
 #MainWidget_sessDtlWidget{
     background-color: rgba(230, 230, 230,255);
@@ -104,4 +137,47 @@
     min-height:24px;
     max-height:24px;
     background-color: rgba(245, 245, 245,255);
+}
+
+#ContactInfoWidget_avatarLbl{
+    min-width:36px;
+    max-width:36px;
+    min-height:36px;
+    max-height:36px;
+    margin-left:16px;
+}
+
+#ContactInfoWidget_nicknameLbl{
+    margin-left:6px;
+    font-size:15px
+}
+
+#ContactDetailWidget_avatarLbl{
+    margin-top:150px;
+    min-width:64px;
+    max-width:64px;
+    min-height:64px;
+    max-height:64px;
+}
+
+#ContactDetailWidget_nicknameLbl{
+    margin-top:30px;
+}
+
+#ContactDetailWidget_signatureLbl{
+    margin-top:15px;
+}
+
+#ContactDetailWidget_createSessBtn{
+    margin-top:30px;
+    margin-right:24px;
+    margin-bottom:12px;
+    min-width:100px;
+    max-width:100px;
+    min-height:32px;
+    max-height:32px;
+    background-color: rgba(233, 233, 233,255);
+    border: none;
+    border-radius:4px;
+    color: rgba(6, 174, 86,255);
 }

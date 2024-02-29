@@ -52,13 +52,9 @@ template <class T>
 int GetListWidgetItem(
     QListWidget *listWidget,
     std::function<bool(T *)> comparator,
-    QListWidgetItem **itemResult,
-    int *rowResult)
+    QListWidgetItem* &itemResult,
+    int& rowResult)
 {
-    if (itemResult == nullptr || rowResult == nullptr)
-    {
-        return -1;
-    }
     for (int i = 0; i < listWidget->count(); i++)
     {
         auto item = listWidget->item(i);
@@ -80,8 +76,8 @@ int GetListWidgetItem(
         {
             continue;
         }
-        *itemResult = item;
-        *rowResult = i;
+        itemResult = item;
+        rowResult = i;
         return 0;
     }
     return GET_LIST_WIDGET_ITEM_NOT_FOUND_ERROR;

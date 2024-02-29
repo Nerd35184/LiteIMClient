@@ -7,13 +7,29 @@ MainWidget::MainWidget(QWidget *parent)
     : QWidget{parent}
 {
     this->initUI(this);
-    this->showDetailWidget(sessDetail);
-    this->showItemListWidget(sessionItemList);
+    this->showDetailWidget(SessDetail);
+    this->showItemListWidget(SessionItemList);
+
+    connect(
+        this->contactListWidget_,
+        &QListWidget::itemClicked,
+        this,
+        [this](QListWidgetItem* item){
+            this->contactListItemClicked(item);
+        });
+
+    connect(
+        this->sessListWidget_,
+        &QListWidget::itemClicked,
+        this,
+        [this](QListWidgetItem* item){
+            this->sessListItemClicked(item);
+        });
 }
 
 int MainWidget::showItemListWidget(ItemListWidgetEnum i)
 {
-    if(i == contactItemList){
+    if(i == ContactItemList){
         this->contactListWidget_->show();
         this->sessListWidget_->hide();
     }else{
@@ -25,7 +41,7 @@ int MainWidget::showItemListWidget(ItemListWidgetEnum i)
 
 int MainWidget::showDetailWidget(ItemDetailWidgetEnum i)
 {
-    if(i == contactDetail){
+    if(i == ContactDetail){
         this->cttDtlWidget_->show();
         this->sessDtlWidget_->hide();
     }else{
@@ -43,6 +59,96 @@ int MainWidget::setShowSearchDetailWidgetBtnClickedCallback(std::function<void (
 int MainWidget::setMenuWidgetAvatar(const QPixmap &avatar)
 {
     this->menuWidget_->setAvatar(avatar);
+    return 0;
+}
+
+int MainWidget::selectMenuBtn(MenuWidget::Btn btn)
+{
+    this->menuWidget_->selectBtn(btn);
+    return 0;
+}
+
+int MainWidget::setMenuBtnClickCallback(std::function<void (MenuWidget &, MenuWidget::Btn)> callback)
+{
+    return this->menuWidget_->setBtnClickCallback(callback);
+}
+
+int MainWidget::clearList(ItemListWidgetEnum i)
+{
+    if(i == SessionItemList){
+        this->sessListWidget_->clear();
+    }else if(i == ContactItemList){
+        this->contactListWidget_->clear();
+    }else{
+        return -1;
+    }
+    return 0;
+}
+
+int MainWidget::addContactListItem(ContactListItem *item)
+{
+    return AddListItem(this->contactListWidget_,item,40,60);
+}
+
+int MainWidget::setContactListItemAvatar(const QString &userId, const QPixmap &avatar)
+{
+    QListWidgetItem *item = nullptr;
+    int row = 0;
+    int ret = GetListWidgetItem<ContactListItem>(
+        this->contactListWidget_,
+        [&userId](ContactListItem *widget)
+        {
+            return widget->getUserIdR() == userId;
+        },
+        item,
+        row);
+    if(ret != 0){
+        return ret;
+    }
+    auto w = qobject_cast<ContactListItem *>(this->contactListWidget_->itemWidget(item));
+    w->setAvatar(avatar);
+    return 0;
+}
+
+int MainWidget::setContactListItemClickedCallback(std::function<void (ContactListItem &)> callback)
+{
+    this->contactListItemClickedCallback_ =callback;
+    return 0;
+}
+
+int MainWidget::setContactDetail(const QString &userId, const QString &nickname, const QString &signature, const QPixmap &avatar)
+{
+    return this->cttDtlWidget_->setDetail(userId,nickname,signature,avatar);
+}
+
+int MainWidget::addSessListWidget(SessListItem *item)
+{
+    return AddListItem(this->sessListWidget_,item,40,60);
+}
+
+int MainWidget::setSessListItemAvatar(const QString &sessId, const QPixmap &avatar)
+{
+    QListWidgetItem *item = nullptr;
+    int row = 0;
+    int ret = GetListWidgetItem<SessListItem>(
+        this->sessListWidget_,
+        [&sessId](SessListItem *widget)
+        {
+            return widget->getSessIdR() == sessId;
+        },
+        item,
+        row);
+    if(ret != 0){
+        return ret;
+    }
+    auto w = qobject_cast<SessListItem *>(this->contactListWidget_->itemWidget(item));
+    w->setAvatar(avatar);
+    return 0;
+}
+
+int MainWidget::setSessListItemClickedCallback(std::function<void (SessListItem &)> callback)
+{
+    this->sessListItemClickedCallback_ = callback;
     return 0;
 }
 
@@ -99,4 +205,20 @@ void MainWidget::initTitlAndItemDetailWidget(QWidget *parent)
     layout->addWidget(this->sessDtlWidget_);
     layout->addWidget(this->cttDtlWidget_);
     return;
+}
+
+void MainWidget::contactListItemClicked(QListWidgetItem *itemClicked)
+{
+    this->ListItemClicked<ContactListItem>(
+        this->contactListWidget_,
+        itemClicked,
+        this->contactListItemClickedCallback_);
+}
+
+void MainWidget::sessListItemClicked(QListWidgetItem *itemClicked)
+{
+    this->ListItemClicked<SessListItem>(
+        this->sessListWidget_,
+        itemClicked,
+        this->sessListItemClickedCallback_);
 }

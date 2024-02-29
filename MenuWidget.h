@@ -11,7 +11,7 @@ class MenuWidget : public QWidget
 {
     Q_OBJECT
 public:
-    enum MenuWidgetBtn{
+    enum Btn{
         sessBtn,
         contactBtn,
         newContactBtn
@@ -36,9 +36,9 @@ public:
 
 public:
     explicit MenuWidget(QWidget *parent = nullptr);
-    int selectBtn(MenuWidgetBtn btn);
+    int selectBtn(Btn btn);
     int setAvatar(const QPixmap& map);
-    int setBtnClickCallback(std::function<void(MenuWidget&,MenuWidgetBtn)> callback);
+    int setBtnClickCallback(std::function<void(MenuWidget&,Btn)> callback);
 
 private:
     AvatarLabel *avatarLbl_ = nullptr;
@@ -49,7 +49,7 @@ private:
 private:
     void initUI(QWidget* parent);
     void btnClicked(bool);
-    std::function<void(MenuWidget&,MenuWidgetBtn)> btnClickedCallback_;
+    std::function<void(MenuWidget&,Btn)> btnClickedCallback_;
     void avatarLblmodifyActionTriggered(AvatarLabel& lbl);
     std::function<void(AvatarLabel&)> avatarLblmodifyActionTriggeredCallback_;
 

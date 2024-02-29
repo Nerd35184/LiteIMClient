@@ -46,7 +46,7 @@ MenuWidget::MenuWidget(QWidget *parent)
     return ;
 }
 
-int MenuWidget::selectBtn(MenuWidgetBtn btn)
+int MenuWidget::selectBtn(Btn btn)
 {
     if(btn == newContactBtn){
         qDebug("MenuWidget selectBtn error");
@@ -70,7 +70,7 @@ int MenuWidget::setAvatar(const QPixmap &map)
     return 0;
 }
 
-int MenuWidget::setBtnClickCallback(std::function<void (MenuWidget &, MenuWidgetBtn)> callback)
+int MenuWidget::setBtnClickCallback(std::function<void (MenuWidget &, Btn)> callback)
 {
     this->btnClickedCallback_ = callback;
     return 0;
@@ -111,7 +111,7 @@ void MenuWidget::btnClicked(bool)
         return ;
     }
     auto s = sender();
-    MenuWidgetBtn btn;
+    Btn btn;
     if(s == this->sessBtn_){
         btn = sessBtn;
     }else if(s == this->contactBtn_){
