@@ -25,6 +25,7 @@ public:
             std::function<void(AvatarLabel&)> modifyActionTriggeredCallback
             );
         virtual void contextMenuEvent(QContextMenuEvent *event);
+        int setModifyActionTriggeredCallback(std::function<void(AvatarLabel&)> modifyActionTriggeredCallback);
     private:
         QAction *modifyAction_ = nullptr;
 
@@ -39,6 +40,8 @@ public:
     int selectBtn(Btn btn);
     int setAvatar(const QPixmap& map);
     int setBtnClickCallback(std::function<void(MenuWidget&,Btn)> callback);
+    int setModifyActionTriggeredCallback(
+        std::function<void(AvatarLabel&)> callback);
 
 private:
     AvatarLabel *avatarLbl_ = nullptr;
@@ -50,8 +53,6 @@ private:
     void initUI(QWidget* parent);
     void btnClicked(bool);
     std::function<void(MenuWidget&,Btn)> btnClickedCallback_;
-    void avatarLblmodifyActionTriggered(AvatarLabel& lbl);
-    std::function<void(AvatarLabel&)> avatarLblmodifyActionTriggeredCallback_;
 
 signals:
 };

@@ -51,7 +51,7 @@ int MainWidget::showDetailWidget(ItemDetailWidgetEnum i)
     return 0;
 }
 
-int MainWidget::setShowSearchDetailWidgetBtnClickedCallback(std::function<void ()> callback)
+int MainWidget::setShowSearchDetailWidgetBtnClickedCallback(std::function<void (SearchWidget&)> callback)
 {
     return this->searchWidget_->setShowSearchDetailWidgetBtnClickedCallback(callback);
 }
@@ -71,6 +71,11 @@ int MainWidget::selectMenuBtn(MenuWidget::Btn btn)
 int MainWidget::setMenuBtnClickCallback(std::function<void (MenuWidget &, MenuWidget::Btn)> callback)
 {
     return this->menuWidget_->setBtnClickCallback(callback);
+}
+
+int MainWidget::setModifyActionTriggeredCallback(std::function<void (MenuWidget::AvatarLabel &)> callback)
+{
+    return this->menuWidget_->setModifyActionTriggeredCallback(callback);
 }
 
 int MainWidget::clearList(ItemListWidgetEnum i)
@@ -235,8 +240,40 @@ int MainWidget::upsertSessDetail(ChatDetailWidget *w, bool show)
     if(w == nullptr){
         return -1;
     }
-    qDebug("tmp 7.2.1");
     return this->sessDtlWidget_->upsertSessDetail(w,show);
+}
+
+int MainWidget::removeSess(const QString &sessId)
+{
+    int ret = this->sessDtlWidget_->removeSessDetail(sessId);
+    if(ret != 0){
+        return ret;
+    }
+    return TakeListWidgetItem<SessListItem>(
+        this->sessListWidget_,
+        [&sessId](SessListItem *widget)
+        {
+            return widget->getSessIdR() == sessId;
+        });
+}
+
+int MainWidget::removeContact(const QString &userId)
+{
+    int ret = this->cttDtlWidget_->clearIfEqual(userId);
+    if(ret != 0){
+        return 0;
+    }
+    return  TakeListWidgetItem<ContactListItem>(
+        this->contactListWidget_,
+        [&userId](ContactListItem *widget)
+        {
+            return widget->getUserIdR() == userId;
+        });
+}
+
+int MainWidget::addChatBubbleWidget(const QString &sessId, ChatBubbleWidget *chatBubbleWidget)
+{
+    return this->sessDtlWidget_->addChatBubbleWidget(sessId,chatBubbleWidget);
 }
 
 void MainWidget::initUI(QWidget *parent)

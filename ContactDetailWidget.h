@@ -16,7 +16,9 @@ public:
         const QString &nickname,
         const QString &signature,
         const QPixmap &avatar);
+    int clearIfEqual(const QString &userId);
     const QString& getUserIdR() const;
+    int clear();
 
 private:
     QLabel *avatarLbl_ = nullptr;

@@ -94,8 +94,8 @@ int TakeListWidgetItem(
     int ret = GetListWidgetItem<T>(
         listWidget,
         comparator,
-        &item,
-        &row);
+        item,
+        row);
 
     if (ret != 0 && ret != GET_LIST_WIDGET_ITEM_NOT_FOUND_ERROR)
     {

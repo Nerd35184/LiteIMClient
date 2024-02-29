@@ -13,14 +13,14 @@ public:
         QWidget *parent,
         std::function<void()> showSearchDetailWidgetBtnClickedCallback);
     int setShowSearchDetailWidgetBtnClickedCallback(
-        std::function<void()> showSearchDetailWidgetBtnClickedCallback);
+        std::function<void(SearchWidget&)> showSearchDetailWidgetBtnClickedCallback);
 
 private:
     QLineEdit* searchListLdt_ = nullptr;
     QPushButton* showSearchDetailWidgetBtn_ = nullptr;
 
 private:
-    std::function<void()> showSearchDetailWidgetBtnClickedCallback_ = nullptr;
+    std::function<void(SearchWidget&)> showSearchDetailWidgetBtnClickedCallback_ = nullptr;
 
 private:
     void initUI(QWidget *parent);

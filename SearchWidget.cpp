@@ -30,11 +30,11 @@ void SearchWidget::showSearchDetailWidgetBtnClicked(bool)
     if(this->showSearchDetailWidgetBtn_ == nullptr){
         return ;
     }
-    this->showSearchDetailWidgetBtnClickedCallback_();
+    this->showSearchDetailWidgetBtnClickedCallback_(*this);
     return ;
 }
 
-int SearchWidget::setShowSearchDetailWidgetBtnClickedCallback(std::function<void ()> callback)
+int SearchWidget::setShowSearchDetailWidgetBtnClickedCallback(std::function<void (SearchWidget&)> callback)
 {
     this->showSearchDetailWidgetBtnClickedCallback_ = callback;
     return 0;

@@ -40,6 +40,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ChatDetailWidget.h ChatDetailWidget.cpp
         ChatBubbleListWidget.h ChatBubbleListWidget.cpp
         SessInfo.h SessInfo.cpp
+        SearchDetailWidget.h SearchDetailWidget.cpp
+        SearchResultItemWidget.h SearchResultItemWidget.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET LiteIMClient APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

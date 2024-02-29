@@ -17,7 +17,7 @@ ChatDetailWidget::ChatDetailWidget(
     connect(this->sendMsgBtn_, &QPushButton::clicked, this, &ChatDetailWidget::sendMsgBtnClicked);
 }
 
-const QString &ChatDetailWidget::getSessId() const
+const QString &ChatDetailWidget::getSessIdR() const
 {
     return this->sessId_;
 }

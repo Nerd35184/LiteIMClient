@@ -5,6 +5,7 @@
 #include "JsonStructs.h"
 #include "qnetworkreply.h"
 #include "ContactListItem.h"
+#include <QBuffer>
 
 LiteIMClient::LiteIMClient(const QString &host)
 {
@@ -25,6 +26,10 @@ LiteIMClient::LiteIMClient(const QString &host)
         }
         );
 
+    this->mainWidget_.setModifyActionTriggeredCallback([this](MenuWidget::AvatarLabel &lbl){
+        this->modifyActionTriggeredCallback(lbl);
+    });
+
     this->mainWidget_.setContactListItemClickedCallback(
         [this](ContactListItem &item){
             this->contactListItemClickedCallback(item);
@@ -42,7 +47,26 @@ LiteIMClient::LiteIMClient(const QString &host)
         }
         );
 
+    this->searchDetailWidget_.setReturnPressedCallback(
+        [this](SearchDetailWidget &w)
+        {
+            this->searchDetailWidgetReturnPressedCallback(w);
+        });
 
+    this->mainWidget_.setShowSearchDetailWidgetBtnClickedCallback([this](SearchWidget& searchWidget){
+        this->showSearchDetailWidgetBtnClickedCallback(searchWidget);
+    });
+    this->userInfowidget_.setSaveBtnClickedCallback(
+        [this](UserInfoWidget& userInfowidget)
+        {
+            this->userInfoWidgetSaveBtnClickedCallback(userInfowidget);
+        });
+    this->userInfowidget_.setObjectName("UserInfoWidget");
+    this->searchDetailWidget_.setObjectName("SearchDetailWidget");
+
+
+    QObject::connect(&this->webSocket_, &QWebSocket::connected, this, &LiteIMClient::webWocketConnectedCallback);
+    QObject::connect(&this->webSocket_, &QWebSocket::disconnected, this, &LiteIMClient::webWocketDisconnectedCallback);
     this->mainWidget_.showItemListWidget(MainWidget::SessionItemList);
     this->mainWidget_.hide();
 }
@@ -173,9 +197,8 @@ void LiteIMClient::handleLogInResponse(const int code, const QString &msg, const
         qDebug("handleLoginResponse get getContactList error");
         return;
     }
-    // qDebug("handleLoginResponse webSocket_ open %s", this->webSocketUrl_.toStdString().c_str());
-    // this->webSocket_.open(QUrl(this->webSocketUrl_));
-
+    qDebug("handleLoginResponse webSocket_ open %s", this->webSocketUrl_.toStdString().c_str());
+    this->webSocket_.open(QUrl(this->webSocketUrl_));
     this->mainWidget_.show();
     return ;
 }
@@ -210,7 +233,7 @@ void LiteIMClient::handleGetContactListResponse(const int code, const QString &m
             item.userId_,
             item.nickname_,
             [this](ContactListItem &w){
-                this->contactListItemDeleteActCallback(w);
+                this->deleteContactCallback(w);
             });
         int ret = this->mainWidget_.addContactListItem(w);
         if(ret != 0){
@@ -232,6 +255,26 @@ void LiteIMClient::handleGetContactListResponse(const int code, const QString &m
 void LiteIMClient::menuBtnClickedCallback(MenuWidget &w, MenuWidget::Btn btn)
 {
     this->selectMenu(btn);
+}
+
+void LiteIMClient::modifyActionTriggeredCallback(MenuWidget::AvatarLabel &lbl)
+{
+    qDebug("LiteImClient modifyActionTriggeredCallback");
+    auto avatar = this->pixmapCache_[this->avatarUrl_];
+    if (avatar == nullptr)
+    {
+        avatar = std::make_shared<QPixmap>();
+    }
+    int ret = this->userInfowidget_.init(
+        this->nickName_,
+        this->signature_,
+        *avatar);
+    if (ret != 0)
+    {
+        return;
+    }
+    this->userInfowidget_.show();
+    return ;
 }
 
 void LiteIMClient::contactListItemDeleteActCallback(ContactListItem &item)
@@ -293,6 +336,88 @@ int LiteIMClient::selectMenu(MenuWidget::Btn btn)
     return 0;
 }
 
+int LiteIMClient::setUserInfo(const QString &nickname, const QString &signature, const QString &avatar)
+{
+    QJsonObject requestBody;
+    requestBody.insert("nickname", nickname);
+    requestBody.insert("signature", signature);
+    requestBody.insert("avatar", avatar);
+    QJsonDocument requestBodyDocument(requestBody);
+    QByteArray requestBodyByte = requestBodyDocument.toJson();
+    std::map<QString, QString> headers;
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_CONTENT_TYPE, HTTP_HEADER_JSON_CONTENT_TYPE));
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_AUTHORIZATION, this->token_));
+    return DoHttpRequestHandleCodeMsgDataResponse(
+        this->networkAccessManager_,
+        QNetworkAccessManager::Operation::PostOperation,
+        this->setUserInfoUrl_,
+        headers,
+        requestBodyByte,
+        [this](const int code, const QString &msg, const QJsonObject &data)
+        {
+            this->handleSetUserInfoResponse(code, msg, data);
+        },
+        PrintCodeMsgFormatError,
+        PrintHttpError);
+}
+
+void LiteIMClient::handleSetUserInfoResponse(const int code, const QString &msg, const QJsonObject &data)
+{
+    if (code != 0)
+    {
+        qDebug("LiteImClient handleSetUserInfoResponse 1 %s", msg.toStdString().c_str());
+        return;
+    }
+    SetUserInfoResponse rsp;
+    if (!rsp.init(data))
+    {
+        qDebug("LiteImClient handleSetUserInfoResponse 2");
+        return;
+    }
+    this->nickName_ = rsp.nickname_;
+    this->signature_ = rsp.signature_;
+    this->avatarUrl_ = rsp.avatar_;
+    int ret = this->getQPixmap(
+        this->avatarUrl_,
+        [this](const QPixmap &pixmap)
+        {
+            this->mainWidget_.setMenuWidgetAvatar(pixmap);
+        },
+        PrintHttpError);
+    if (ret != 0)
+    {
+        qDebug("handleLoginResponse get getQPixmap error");
+        return;
+    }
+    return;
+}
+
+void LiteIMClient::handleGetUserInfoByNicknameResponse(
+    const int code,
+    const QString &msg,
+    const QJsonObject &data,
+    std::function<void (const GetUserInfoByNicknameResponse &)> callback)
+{
+    if (code != 0)
+    {
+        qDebug("LiteImClient handleGetUserInfoByNicknameResponse %s", msg.toStdString().c_str());
+        return;
+    }
+    GetUserInfoByNicknameResponse rsp;
+    bool ok = rsp.init(data);
+    if (!ok)
+    {
+        qDebug("LiteImClient handleGetUserInfoByNicknameResponse %s", msg.toStdString().c_str());
+        return;
+    }
+    if (callback != nullptr)
+    {
+        callback(rsp);
+    }
+    qDebug("handleGetUserInfoByNicknameResponse 1");
+    return;
+}
+
 int LiteIMClient::upsertSessDetail(const SessInfo& sessInfo,bool show)
 {
     ObjGuard g(1);
@@ -304,8 +429,7 @@ int LiteIMClient::upsertSessDetail(const SessInfo& sessInfo,bool show)
         sessInfo.getSessNameR(),
         [this](ChatDetailWidget &chatDetailWidget)
         {
-            //todo
-            // this->sendMsgBtnClickedCallback(chatSessDetailWidget);
+            this->sendMsgBtnClickedCallback(chatDetailWidget);
         });
     int ret = this->mainWidget_.upsertSessDetail(sessWidget, true);
     if (ret != 0)
@@ -314,6 +438,118 @@ int LiteIMClient::upsertSessDetail(const SessInfo& sessInfo,bool show)
         return ret;
     }
     return 0;
+}
+
+int LiteIMClient::sendTextMsg(const QString &to, ContactType contactType, const QString &text)
+{
+    QJsonObject requestBody;
+    requestBody.insert("to", to);
+    requestBody.insert("contactType", contactType);
+    requestBody.insert("msgType", LiteIMClient::TextMsgType);
+    QJsonObject content;
+    content.insert("text", text);
+    requestBody.insert("content", content);
+    QJsonDocument requestBodyDocument(requestBody);
+    QByteArray requestBodyByte = requestBodyDocument.toJson();
+    std::map<QString, QString> headers;
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_CONTENT_TYPE, HTTP_HEADER_JSON_CONTENT_TYPE));
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_AUTHORIZATION, this->token_));
+    return DoHttpRequestHandleCodeMsgDataResponse(
+        this->networkAccessManager_,
+        QNetworkAccessManager::Operation::PostOperation,
+        this->sendMsgUrl_,
+        headers,
+        requestBodyByte,
+        [this](const int code, const QString &msg, const QJsonObject &data) {
+        },
+        PrintCodeMsgFormatError,
+        PrintHttpError);
+}
+
+int LiteIMClient::uploadQPixmap(const QString &suffixName, const QPixmap &data, std::function<void (int, const QString &, const QJsonObject &)> callback)
+{
+    QByteArray avatarByte;
+    QBuffer buff(&avatarByte);
+    bool ok = data.save(&buff, suffixName.toStdString().c_str());
+    if (!ok)
+    {
+        return -1;
+    }
+    return this->uploadData(
+        suffixName,
+        avatarByte,
+        callback);
+}
+
+int LiteIMClient::uploadData(const QString &suffixName, const QByteArray &data, std::function<void (int, const QString &, const QJsonObject &)> callback)
+{
+    QString url = this->uploadDataUrlFmt_ + suffixName;
+    std::map<QString, QString> headers;
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_AUTHORIZATION, this->token_));
+    return DoHttpRequestHandleCodeMsgDataResponse(
+        this->networkAccessManager_,
+        QNetworkAccessManager::Operation::PostOperation,
+        url,
+        headers,
+        data,
+        [this, callback](int code, const QString msg, const QJsonObject &data)
+        {
+            callback(code, msg, data);
+        },
+        PrintCodeMsgFormatError,
+        PrintHttpError);
+}
+
+int LiteIMClient::getUserInfoByNickname(const QString &nickname, int offset, int limit, std::function<void (const GetUserInfoByNicknameResponse &)> callback)
+{
+    QJsonObject requestBody;
+    requestBody.insert("nickname", nickname);
+    requestBody.insert("offset", offset);
+    requestBody.insert("limit", limit);
+    QJsonDocument requestBodyDocument(requestBody);
+    QByteArray requestBodyByte = requestBodyDocument.toJson();
+    std::map<QString, QString> headers;
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_CONTENT_TYPE, HTTP_HEADER_JSON_CONTENT_TYPE));
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_AUTHORIZATION, this->token_));
+    return DoHttpRequestHandleCodeMsgDataResponse(
+        this->networkAccessManager_,
+        QNetworkAccessManager::Operation::PostOperation,
+        this->getUserInfoByNicknameUrl_,
+        headers,
+        requestBodyByte,
+        [this, callback](int code, const QString &msg, const QJsonObject &data)
+        {
+            this->handleGetUserInfoByNicknameResponse(code, msg, data, callback);
+        },
+        PrintCodeMsgFormatError,
+        PrintHttpError);
+}
+
+int LiteIMClient::addContact(
+    const QString &userId, std::function<void (const int, const QString &, const QJsonObject &)> callback)
+{
+    QJsonObject requestBody;
+    requestBody.insert("userId", userId);
+    QJsonDocument requestBodyDocument(requestBody);
+    QByteArray requestBodyByte = requestBodyDocument.toJson();
+    std::map<QString, QString> headers;
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_AUTHORIZATION, this->token_));
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_CONTENT_TYPE, HTTP_HEADER_JSON_CONTENT_TYPE));
+    return DoHttpRequestHandleCodeMsgDataResponse(
+        this->networkAccessManager_,
+        QNetworkAccessManager::Operation::PostOperation,
+        this->addContantUrl_,
+        headers,
+        requestBodyByte,
+        [this, callback](const int code, const QString &msg, const QJsonObject &data)
+        {
+            if (callback != nullptr)
+            {
+                callback(code, msg, data);
+            }
+        },
+        PrintCodeMsgFormatError,
+        PrintHttpError);
 }
 
 void LiteIMClient::createSessBtnClickedCallback(ContactDetailWidget &w)
@@ -361,8 +597,7 @@ void LiteIMClient::createSessBtnClickedCallback(ContactDetailWidget &w)
     sessListItem->setDeleteActionTriggered(
         [this](SessListItem &sess)
         {
-            //todo
-            // this->deleteSessCallback(sess);
+            this->deleteSessCallback(sess);
         });
     int ret = this->mainWidget_.upsertSessListItem(sessListItem,true);
     if (ret != 0)
@@ -376,5 +611,291 @@ void LiteIMClient::createSessBtnClickedCallback(ContactDetailWidget &w)
         qDebug("LiteImClient createSessBtnClickedCallback upsertSessDetail error");
         return;
     }
+    return;
+}
+
+void LiteIMClient::sendMsgBtnClickedCallback(ChatDetailWidget &w)
+{
+    auto sessInfo = this->sessInfos_[w.getSessIdR()];
+    if (sessInfo == nullptr)
+    {
+        return;
+    }
+    int ret = this->sendTextMsg(sessInfo->getToR(), RegularUser, w.getInputStr());
+    if (ret != 0)
+    {
+        qDebug("LiteImClient sendMsgBtnClickedCallback error");
+        return;
+    }
+    w.cleanInputStr();
+    return;
+}
+
+void LiteIMClient::processTextWebSockMsg(
+    const QString &sessId,
+    int64_t msgId,
+    const QString &senderId,
+    const QJsonObject &contentObj)
+{
+    if (!contentObj.value("text").isString())
+    {
+        return;
+    }
+    QString text = contentObj.value("text").toString();
+
+    std::shared_ptr<QPixmap> avatar = nullptr;
+    // todo 这里可以考虑把自己的info也放到缓存中,可能更对称一点
+    bool left = false;
+    const QString *nickname = &this->nickName_;
+    const QString *avtarUrl = &this->avatarUrl_;
+    if (senderId != this->userId_)
+    {
+        left = true;
+        auto userInfo = this->userInfoCache_[senderId];
+        if (userInfo == nullptr)
+        {
+            qDebug("processTextWebSockMsg userInfo == nullptr");
+            return;
+        }
+        nickname = &userInfo->getNicknameR();
+        avtarUrl = &userInfo->getAvatarUrlR();
+    }
+    avatar = this->pixmapCache_[*avtarUrl];
+    if (avatar == nullptr)
+    {
+        avatar = std::make_shared<QPixmap>();
+    }
+    ObjGuard g(1);
+    auto chatBubble = CreateQWidget<ChatBubbleWidget>(
+        g,
+        "ChatBubbleWidget",
+        nullptr,
+        *avatar,
+        *nickname,
+        text,
+        left);
+
+    int ret = this->mainWidget_.addChatBubbleWidget(sessId, chatBubble);
+    if (ret != 0)
+    {
+        qDebug("processTextWebSockMsg addChatBubbleWidget error");
+        return;
+    }
+    return;
+}
+
+void LiteIMClient::webSocketTextMessageReceivedCallback(QString message)
+{
+    qDebug("LiteImClient webSocketTextMessageReceivedCallback %s", message.toStdString().c_str());
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(message.toStdString().data());
+    if (jsonDoc.isNull())
+    {
+        qDebug("LiteImClient webSocketTextMessageReceivedCallback fromJson error");
+        return;
+    }
+    if (!jsonDoc.isObject())
+    {
+        qDebug("LiteImClient webSocketTextMessageReceivedCallback jsonDoc error");
+        return;
+    }
+    QJsonObject obj = jsonDoc.object();
+    if (!obj.value("sender_id").isString())
+    {
+        return;
+    }
+    QString senderId = obj.value("sender_id").toString();
+    if (!obj.value("sess_id").isString())
+    {
+        return;
+    }
+    QString sessId = obj.value("sess_id").toString();
+    if (!obj.value("msg_id").isDouble())
+    {
+        return;
+    }
+    int64_t msgId = obj.value("msg_id").toInteger();
+    if (!obj.value("msg_type").isDouble())
+    {
+        return;
+    }
+    int msgType = obj.value("msg_type").toInt();
+    if (!obj.value("content").isObject())
+    {
+        return;
+    }
+    QJsonObject contentObj = obj.value("content").toObject();
+    switch (msgType)
+    {
+    case TextMsgType:
+        this->processTextWebSockMsg(sessId, msgId, senderId, contentObj);
+        break;
+    default:
+        qDebug("not support msg type %d", msgType);
+        return;
+    }
+    return;
+}
+
+void LiteIMClient::webWocketConnectedCallback()
+{
+    qDebug("LiteImClient webWocketConnectedCallback");
+    QObject::connect(&this->webSocket_, &QWebSocket::textMessageReceived,
+                     this, &LiteIMClient::webSocketTextMessageReceivedCallback);
+
+    QJsonObject requestBody;
+    requestBody.insert("token", this->token_);
+    QJsonDocument requestBodyDocument(requestBody);
+    QByteArray requestBodyByte = requestBodyDocument.toJson();
+    QString requestBodyStr(requestBodyByte);
+    this->webSocket_.sendTextMessage(requestBodyStr);
+    return ;
+}
+
+void LiteIMClient::webWocketDisconnectedCallback()
+{
+    qDebug("LiteImClient webWocketDisconnectedCallback");
+    return ;
+}
+
+void LiteIMClient::userInfoWidgetSaveBtnClickedCallback(UserInfoWidget &userInfoWidget)
+{
+    qDebug("userInfoWidgetSaveBtnClickedCallback");
+    QString nickname = userInfoWidget.getNickname();
+    if (nickname == "")
+    {
+        nickname = this->nickName_;
+    }
+    QString signature = userInfoWidget.getSignatrue();
+    if (signature == "")
+    {
+        signature = this->signature_;
+    }
+    bool avatarChanged = userInfoWidget.getAvatarChanged();
+    if (avatarChanged)
+    {
+        int ret = this->uploadQPixmap(
+            UPLOAD_AVATAR_FMT,
+            userInfoWidget.getAvatar(),
+            [this, nickname, signature](int code, const QString &msg, const QJsonObject &data)
+            {
+                if (!data.value("url").isString())
+                {
+                    qDebug("userInfoWidgetSaveBtnClickedCallback error");
+                    return;
+                };
+                this->setUserInfo(nickname, signature, data.value("url").toString());
+            });
+        if (ret != 0)
+        {
+            qDebug("LiteImClient uploadQPixmap");
+            return;
+        }
+        return;
+    }
+
+    if (nickname != this->nickName_ || signature != this->signature_)
+    {
+        int ret = this->setUserInfo(nickname, signature, this->avatarUrl_);
+        if (ret != 0)
+        {
+            qDebug("LiteImClient userInfoWidgetSaveBtnClickedCallback");
+            return;
+        }
+    }
+    return ;
+}
+
+void LiteIMClient::showSearchDetailWidgetBtnClickedCallback(SearchWidget& searchWidget)
+{
+    qDebug("setAddContantWidgetShowBtnClickedCallback");
+    this->searchDetailWidget_.init();
+    this->searchDetailWidget_.show();
+}
+
+void LiteIMClient::searchDetailWidgetReturnPressedCallback(SearchDetailWidget &w)
+{
+    w.initSearchResultList();
+    this->getUserInfoByNickname(
+        w.getSearchLineText(),
+        0,
+        65535,
+        [this](const GetUserInfoByNicknameResponse &rsp)
+        {
+            ObjGuard g(rsp.count_);
+            for (auto &item : rsp.items_)
+            {
+                auto w = CreateQWidget<SearchResultItemWidget>(
+                    g,
+                    "SearchResultItemWidget",
+                    nullptr,
+                    item.userId_,
+                    QPixmap(),
+                    item.nickname_,
+                    item.signature_,
+                    [this](SearchResultItemWidget &w)
+                    {
+                        this->addContactBtnClickedCallback(w);
+                    });
+                int ret = this->searchDetailWidget_.addSearchResultListItem(w);
+                if (ret != 0)
+                {
+                    return;
+                }
+                const QString userId = item.userId_;
+                ret = this->getQPixmap(
+                    item.avatar_,
+                    [this, userId](const QPixmap &pixmap)
+                    {
+                        this->searchDetailWidget_.setSearchResultListItemAvatar(userId, pixmap);
+                    },
+                    PrintHttpError);
+                if (ret != 0)
+                {
+                    return;
+                }
+            }
+        });
+    return;
+}
+
+void LiteIMClient::addContactBtnClickedCallback(SearchResultItemWidget &w)
+{
+    QString userId = w.getUserIdR();
+    this->addContact(
+        userId,
+        [this, userId](const int code, const QString &msg, const QJsonObject &data)
+        {
+            if (code != 0)
+            {
+                qDebug("addContactBtnClickedCallback AddContantSearchResultItemWidget");
+                return;
+            }
+            qDebug("LiteImClient addContactBtnClickedCallback");
+            this->searchDetailWidget_.setAddContantBtnDisable(userId);
+        });
+}
+
+void LiteIMClient::deleteSessCallback(SessListItem &sessInfoWidget)
+{
+    QString sessID = sessInfoWidget.getSessIdR();
+    int ret = this->mainWidget_.removeSess(sessID);
+    if (ret != 0)
+    {
+        return;
+    }
+    this->sessInfos_.erase(sessID);
+    return;
+}
+
+void LiteIMClient::deleteContactCallback(ContactListItem &contactInfoWidet)
+{
+    QString userId = contactInfoWidet.getUserIdR();
+    int ret = this->mainWidget_.removeContact(userId);
+    if (ret != 0)
+    {
+        qDebug("LiteImClient deleteContactCallback removeContact error");
+        return;
+    }
+    this->userInfoCache_.erase(userId);
     return;
 }

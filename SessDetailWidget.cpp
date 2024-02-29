@@ -9,7 +9,6 @@ SessDetailWidget::SessDetailWidget(QWidget *parent)
 
 int SessDetailWidget::upsertSessDetail(ChatDetailWidget *w, bool show)
 {
-    qDebug("tmp 7.2.2");
     if (w == nullptr)
     {
         return -1;
@@ -23,7 +22,7 @@ int SessDetailWidget::upsertSessDetail(ChatDetailWidget *w, bool show)
             continue;
         }
         bool equal = false;
-        if (widget->getSessId() == w->getSessId())
+        if (widget->getSessIdR() == w->getSessIdR())
         {
             found = true;
             equal = true;
@@ -55,6 +54,50 @@ int SessDetailWidget::upsertSessDetail(ChatDetailWidget *w, bool show)
         w->hide();
     }
     return 0;
+}
+
+int SessDetailWidget::removeSessDetail(const QString &sessId)
+{
+    for (auto &child : this->children())
+    {
+        auto widget = qobject_cast<ChatDetailWidget *>(child);
+        if (widget == nullptr)
+        {
+            continue;
+        }
+        if (widget->getSessIdR() == sessId)
+        {
+            auto layout = this->layout_;
+            layout->removeWidget(widget);
+            widget->deleteLater();
+            break;
+        }
+    }
+    return 0;
+}
+
+int SessDetailWidget::addChatBubbleWidget(const QString &sessId, ChatBubbleWidget *chatBubbleWidget)
+{
+    if (chatBubbleWidget == nullptr)
+    {
+        qDebug("SessDetailsWidget addChatBubbleWidget chatBubbleWidget == nullptr");
+        return -1;
+    }
+    for (auto &child : this->children())
+    {
+        auto widget = qobject_cast<ChatDetailWidget *>(child);
+        if (widget == nullptr)
+        {
+            continue;
+        }
+        if (widget->getSessIdR() == sessId)
+        {
+            widget->addChatBubbleWidget(chatBubbleWidget);
+            return 0;
+        }
+    }
+    qDebug("SessDetailsWidget addChatBubbleWidget sess not found %s",sessId.toStdString().c_str());
+    return -1;
 }
 
 void SessDetailWidget::initUI(QWidget *parent)

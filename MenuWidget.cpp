@@ -9,6 +9,7 @@ MenuWidget::AvatarLabel::AvatarLabel(
     QLabel{parent},modifyActionTriggeredCallback_(modifyActionTriggeredCallback)
 {
     this->initAction(this);
+    connect(this->modifyAction_,&QAction::triggered,this,&AvatarLabel::modifyActionTriggered);
     return ;
 }
 
@@ -20,6 +21,13 @@ void MenuWidget::AvatarLabel::contextMenuEvent(QContextMenuEvent *event)
     return ;
 }
 
+int MenuWidget::AvatarLabel::setModifyActionTriggeredCallback(std::function<void (AvatarLabel &)> modifyActionTriggeredCallback)
+{
+    qDebug("setModifyActionTriggeredCallback 1");
+    this->modifyActionTriggeredCallback_ = modifyActionTriggeredCallback;
+    return 0;
+}
+
 void MenuWidget::AvatarLabel::initAction(QWidget *parent)
 {
     ObjGuard g(1);
@@ -29,6 +37,7 @@ void MenuWidget::AvatarLabel::initAction(QWidget *parent)
 
 void MenuWidget::AvatarLabel::modifyActionTriggered(bool)
 {
+    qDebug("setModifyActionTriggeredCallback 2");
     if(this->modifyActionTriggeredCallback_ != nullptr){
         this->modifyActionTriggeredCallback_(*this);
     }
@@ -76,16 +85,18 @@ int MenuWidget::setBtnClickCallback(std::function<void (MenuWidget &, Btn)> call
     return 0;
 }
 
+int MenuWidget::setModifyActionTriggeredCallback(std::function<void (AvatarLabel &)> callback)
+{
+    return this->avatarLbl_->setModifyActionTriggeredCallback(callback);
+}
+
 void MenuWidget::initUI(QWidget *parent)
 {
     ObjGuard g(4);
 
     this->avatarLbl_ =  CreateQWidget<AvatarLabel>(
         g,"MenuWidget_avatarLbl",
-        parent,
-        [this](AvatarLabel& lbl){
-            this->avatarLblmodifyActionTriggered(lbl);
-        });
+        parent,nullptr);
     this->avatarLbl_->setScaledContents(true);
 
     this->sessBtn_ = CreateQWidget<QPushButton>(g,"MenuWidget_sessBtn",parent);
@@ -124,13 +135,3 @@ void MenuWidget::btnClicked(bool)
     }
     this->btnClickedCallback_(*this,btn);
 }
-
-void MenuWidget::avatarLblmodifyActionTriggered(AvatarLabel& lbl)
-{
-    if(this->avatarLblmodifyActionTriggeredCallback_ == nullptr){
-        return ;
-    }
-    this->avatarLblmodifyActionTriggeredCallback_(lbl);
-    return;
-}
-

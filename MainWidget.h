@@ -32,11 +32,13 @@ public:
     int showItemListWidget(ItemListWidgetEnum i);
     int showDetailWidget(ItemDetailWidgetEnum i);
     int setShowSearchDetailWidgetBtnClickedCallback(
-        std::function<void()> showSearchDetailWidgetBtnClickedCallback);
+        std::function<void(SearchWidget&)> showSearchDetailWidgetBtnClickedCallback);
     int setMenuWidgetAvatar(const QPixmap& avatar);
     int selectMenuBtn(MenuWidget::Btn btn);
     int clickMenuBtn(MenuWidget::Btn btn);
     int setMenuBtnClickCallback(std::function<void(MenuWidget&,MenuWidget::Btn)> callback);
+    int setModifyActionTriggeredCallback(
+        std::function<void (MenuWidget::AvatarLabel &)> callback);
     int clearList(ItemListWidgetEnum i);
 
     int addContactListItem(ContactListItem* item);
@@ -57,7 +59,11 @@ public:
     int selectSessListItem(const QString& sessId);
     int upsertSessListItem(SessListItem* item, bool select);
     int upsertSessDetail(ChatDetailWidget* w,bool show);
+    int removeSess(const QString &sessId);
+    int removeContact(const QString &userId);
 
+
+    int addChatBubbleWidget(const QString &sessId, ChatBubbleWidget *chatBubbleWidget);
 
 private:
     MenuWidget* menuWidget_= nullptr;

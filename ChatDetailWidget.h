@@ -17,7 +17,7 @@ public:
         const QString &sessName,
         std::function<void(ChatDetailWidget &)> sendMsgBtnClickedCallback);
 
-    const QString &getSessId() const;
+    const QString &getSessIdR() const;
     const QString getInputStr() const;
 
     void cleanInputStr();

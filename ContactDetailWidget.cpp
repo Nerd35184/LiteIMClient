@@ -35,6 +35,28 @@ int ContactDetailWidget::setDetail(
     return 0;
 }
 
+int ContactDetailWidget::clear()
+{
+    this->userId_.clear();
+    this->avatarLbl_->hide();
+    this->signatureLbl_->hide();
+    this->nicknameLbl_->hide();
+    this->avatarLbl_->hide();
+    this->createSessBtn_->hide();
+    qDebug("clear %s", this->userId_.toStdString().c_str());
+    return 0;
+}
+
+
+int ContactDetailWidget::clearIfEqual(const QString &userId)
+{
+    if (this->userId_  != userId)
+    {
+        return 0;
+    }
+    return this->clear();
+}
+
 const QString &ContactDetailWidget::getUserIdR() const
 {
     return this->userId_;
