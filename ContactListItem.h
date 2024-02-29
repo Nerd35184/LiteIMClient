@@ -16,6 +16,7 @@ public:
         );
     int setAvatar(const QPixmap& avatar);
     const QString& getUserIdR() const;
+    virtual void contextMenuEvent(QContextMenuEvent *event);
 
 private:
     QLabel* avatarLbl_ = nullptr;

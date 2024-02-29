@@ -1,6 +1,8 @@
 #include "ContactListItem.h"
 #include "Util.h"
 #include <QHBoxLayout>
+#include <QMenu>
+#include <QContextMenuEvent>
 
 ContactListItem::ContactListItem(
     QWidget *parent,
@@ -12,6 +14,7 @@ ContactListItem::ContactListItem(
     this->initUI(this);
     this->initAction(this);
     this->nicknameLbl_->setText(nickname);
+    connect(this->deleteAct_, &QAction::triggered, this, &ContactListItem::deleteActionTriggered);
     return ;
 }
 
@@ -24,6 +27,18 @@ int ContactListItem::setAvatar(const QPixmap &avatar)
 const QString &ContactListItem::getUserIdR() const
 {
     return this->userId_;
+}
+
+void ContactListItem::contextMenuEvent(QContextMenuEvent *event)
+{
+    if (event == nullptr)
+    {
+        qDebug("ContactInfoWidget contextMenuEvent error");
+        return;
+    }
+    QMenu menu;
+    menu.addAction(this->deleteAct_);
+    menu.exec(event->globalPos());
 }
 
 void ContactListItem::initUI(QWidget *parent)

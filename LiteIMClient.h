@@ -13,6 +13,7 @@
 #include "SessInfo.h"
 #include "SearchDetailWidget.h"
 #include "JsonStructs.h"
+#include "LogInWidget.h"
 
 #define UPLOAD_AVATAR_FMT ("jpg")
 #define LOGIN_URL_FORMAT ("http://%s/api/login")
@@ -22,6 +23,7 @@
 #define SET_USER_INFO_URL_FORMAT ("http://%s/api/set_user_info")
 #define UPLOAD_DATA_FORMAT ("http://%s/static/upload/")
 #define ADD_CONTANT_URL_FORMAT ("http://%s/api/add_contact")
+#define REMOVE_CONTANT_URL_FORMAT ("http://%s/api/remove_contact")
 #define WEB_SOCKET_URL_FORMAT ("ws://%s/ws")
 
 class LiteIMClient:public QObject
@@ -87,10 +89,15 @@ public:
         const QString &userId,
         std::function<void(const int code, const QString &msg, const QJsonObject &data)>);
 
+    int removeContact(
+        const QString &userId,
+        std::function<void(const int code, const QString &msg, const QJsonObject &data)>);
+
 private:
     MainWidget mainWidget_;
     UserInfoWidget userInfowidget_;
     SearchDetailWidget searchDetailWidget_;
+    LogInWidget logInWidget_;
 
     QString host_;
     QString logInUrl_;
@@ -101,6 +108,7 @@ private:
     QString getUserInfoByNicknameUrl_;
     QString addContantUrl_;
     QString webSocketUrl_;
+    QString removeContactUrl_;
 
     QString token_;
     QNetworkAccessManager networkAccessManager_;

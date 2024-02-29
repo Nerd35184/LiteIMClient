@@ -42,6 +42,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         SessInfo.h SessInfo.cpp
         SearchDetailWidget.h SearchDetailWidget.cpp
         SearchResultItemWidget.h SearchResultItemWidget.cpp
+        LogInWidget.h LogInWidget.cpp
 
     )
 # Define target properties for Android with Qt 6 as:

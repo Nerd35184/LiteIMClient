@@ -19,6 +19,7 @@ LiteIMClient::LiteIMClient(const QString &host)
     this->uploadDataUrlFmt_ = QString::asprintf(UPLOAD_DATA_FORMAT, hostChar);
     this->getUserInfoByNicknameUrl_ = QString::asprintf(GET_USER_INFO_BY_NICKNAME_FORMAT, hostChar);
     this->addContantUrl_ = QString::asprintf(ADD_CONTANT_URL_FORMAT, hostChar);
+    this->removeContactUrl_ = QString::asprintf(REMOVE_CONTANT_URL_FORMAT, hostChar);
 
     this->mainWidget_.setMenuBtnClickCallback(
         [this](MenuWidget& w,MenuWidget::Btn btn){
@@ -552,6 +553,34 @@ int LiteIMClient::addContact(
         PrintHttpError);
 }
 
+int LiteIMClient::removeContact(
+    const QString &userId,
+    std::function<void (const int, const QString &, const QJsonObject &)> callback)
+{
+    QJsonObject requestBody;
+    requestBody.insert("userId", userId);
+    QJsonDocument requestBodyDocument(requestBody);
+    QByteArray requestBodyByte = requestBodyDocument.toJson();
+    std::map<QString, QString> headers;
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_AUTHORIZATION, this->token_));
+    headers.insert(std::pair<QString, QString>(HTTP_HEADER_KEY_CONTENT_TYPE, HTTP_HEADER_JSON_CONTENT_TYPE));
+    return DoHttpRequestHandleCodeMsgDataResponse(
+        this->networkAccessManager_,
+        QNetworkAccessManager::Operation::PostOperation,
+        this->removeContactUrl_,
+        headers,
+        requestBodyByte,
+        [this, callback](const int code, const QString &msg, const QJsonObject &data)
+        {
+            if (callback != nullptr)
+            {
+                callback(code, msg, data);
+            }
+        },
+        PrintCodeMsgFormatError,
+        PrintHttpError);
+}
+
 void LiteIMClient::createSessBtnClickedCallback(ContactDetailWidget &w)
 {
     auto userInfo = this->userInfoCache_[w.getUserIdR()];
@@ -890,12 +919,20 @@ void LiteIMClient::deleteSessCallback(SessListItem &sessInfoWidget)
 void LiteIMClient::deleteContactCallback(ContactListItem &contactInfoWidet)
 {
     QString userId = contactInfoWidet.getUserIdR();
-    int ret = this->mainWidget_.removeContact(userId);
-    if (ret != 0)
-    {
-        qDebug("LiteImClient deleteContactCallback removeContact error");
-        return;
-    }
-    this->userInfoCache_.erase(userId);
+    this->removeContact(
+        contactInfoWidet.getUserIdR(),
+        [this,userId](const int code, const QString &, const QJsonObject &){
+            if(code !=0){
+                return ;
+            }
+            int ret = this->mainWidget_.removeContact(userId);
+            if (ret != 0)
+            {
+                qDebug("LiteImClient deleteContactCallback removeContact error");
+                return;
+            }
+            this->userInfoCache_.erase(userId);
+        }
+        );
     return;
 }
