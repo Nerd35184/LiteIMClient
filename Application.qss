@@ -332,3 +332,65 @@
     border-radius:4px;
     color: rgba(6, 174, 86,255);
 }
+
+#LogInWidget{
+    min-width:250px;
+    max-width:250px;
+    min-height:350px;
+    max-height:350px;
+    background-color: rgba(0, 0, 0,255);
+}
+
+#LogInWidget_titleLal{
+    color: rgba(255, 255, 255,255);
+    font-size:30px;
+    margin-bottom:40px;
+}
+
+#LogInWidget_usernameEdt{
+    border-radius:4px;
+    min-height:40px;
+    max-height:40px;
+    font-size:20px;
+    background-color: transparent;
+    color: rgba(255, 255, 255,255);
+    border-bottom:solid;
+    border-bottom-color:rgb(233, 233, 233);
+    border-bottom-width:1px;
+    margin-left:30px;
+    margin-right:30px;
+}
+
+#LogInWidget_passwordEdt{
+    border-radius:4px;
+    min-height:40px;
+    max-height:40px;
+    margin-bottom:20px;
+    border: none;
+    font-size:20px;
+    background-color: transparent;
+    color: rgba(255, 255, 255,255);
+    border-bottom:solid;
+    border-bottom-color:rgb(233, 233, 233);
+    border-bottom-width:1px;
+    margin-left:30px;
+    margin-right:30px;
+}
+
+
+#LogInWidget_logInBtn{
+    border-radius:4px;
+    background-color: rgba(255, 0, 0,255);
+    min-width:160px;
+    max-width:160px;
+    min-height:40px;
+    max-height:40px;
+}
+
+#LogInWidget_logInBtn:hover{
+    background-color: rgba(255,100, 100,255);
+}
+
+#LogInWidget_logInBtn:checked{
+    background-color: rgba(255,200, 200,255);
+}

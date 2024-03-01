@@ -165,6 +165,7 @@ private:
     void addContactBtnClickedCallback(SearchResultItemWidget &w);
     void deleteSessCallback(SessListItem &sessInfoWidget);
     void deleteContactCallback(ContactListItem &contactInfoWidet);
+    void logInBtnClickedCallback(LogInWidget& l);
 };
 
 #endif // LITEIMCLIENT_H

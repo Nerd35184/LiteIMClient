@@ -3,6 +3,7 @@
 #include <QFile>
 #include "LiteIMClient.h"
 #include "Util.h"
+#include "LogInWidget.h"
 #define APPLIACITON_ASS_PATH (":/qss/Application.qss")
 
 int main(int argc, char *argv[])
@@ -19,6 +20,5 @@ int main(int argc, char *argv[])
     qFile.close();
 
     LiteIMClient client("127.0.0.1:8080");
-    client.logIn("username1", "password1");
     return a.exec();
 }

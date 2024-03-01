@@ -62,14 +62,21 @@ LiteIMClient::LiteIMClient(const QString &host)
         {
             this->userInfoWidgetSaveBtnClickedCallback(userInfowidget);
         });
+
+    this->logInWidget_.setlogInBtnClickedCallback(
+        [this](LogInWidget &l){
+            this->logInBtnClickedCallback(l);
+        });
+
     this->userInfowidget_.setObjectName("UserInfoWidget");
     this->searchDetailWidget_.setObjectName("SearchDetailWidget");
+    this->logInWidget_.setObjectName("LogInWidget");
 
 
     QObject::connect(&this->webSocket_, &QWebSocket::connected, this, &LiteIMClient::webWocketConnectedCallback);
     QObject::connect(&this->webSocket_, &QWebSocket::disconnected, this, &LiteIMClient::webWocketDisconnectedCallback);
     this->mainWidget_.showItemListWidget(MainWidget::SessionItemList);
-    this->mainWidget_.hide();
+    this->logInWidget_.show();
 }
 
 int LiteIMClient::getQPixmap(const QString &url,
@@ -201,6 +208,7 @@ void LiteIMClient::handleLogInResponse(const int code, const QString &msg, const
     qDebug("handleLoginResponse webSocket_ open %s", this->webSocketUrl_.toStdString().c_str());
     this->webSocket_.open(QUrl(this->webSocketUrl_));
     this->mainWidget_.show();
+    this->logInWidget_.hide();
     return ;
 }
 
@@ -935,4 +943,11 @@ void LiteIMClient::deleteContactCallback(ContactListItem &contactInfoWidet)
         }
         );
     return;
+}
+
+void LiteIMClient::logInBtnClickedCallback(LogInWidget &l)
+{
+    const QString username = l.getUsername();
+    const QString password = l.getPassword();
+    this->logIn(username,password);
 }
